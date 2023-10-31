@@ -1,0 +1,3 @@
+const MONTH_UNIT = 30 * 24 * 3600;
+const PROCESSING_GAS = 400000;
+export { MONTH_UNIT, PROCESSING_GAS };
