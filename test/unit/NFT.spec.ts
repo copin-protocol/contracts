@@ -55,9 +55,19 @@ describe("Account", () => {
       const tx = await collection.connect(wallets[1] as any).mint(1, 1, {
         value: PRICE,
       });
+      const blockNum = await ethers.provider.getBlockNumber();
+      const block = await ethers.provider.getBlock(blockNum);
+      const timestamp = block.timestamp;
       await expect(tx)
         .to.emit(collection, "Mint")
-        .withArgs(1, 1, PRICE, 1, wallets[1].address);
+        .withArgs(
+          1,
+          1,
+          PRICE,
+          timestamp,
+          timestamp + MONTH_UNIT,
+          wallets[1].address
+        );
     });
     it("success 12 months", async () => {
       await collection.connect(wallets[1] as any).mint(1, 1, {
@@ -70,6 +80,13 @@ describe("Account", () => {
         value: PRICE,
       });
       await expect(tx).to.be.revertedWith("InvalidTier()");
+    });
+    it("revert TierDisabled()", async () => {
+      await collection.enableTier(1, false);
+      const tx = collection.connect(wallets[1] as any).mint(1, 1, {
+        value: PRICE,
+      });
+      await expect(tx).to.be.revertedWith("TierDisabled()");
     });
     it("revert InvalidDuration()", async () => {
       const tx = collection.connect(wallets[1] as any).mint(1, 0, {
@@ -137,10 +154,17 @@ describe("Account", () => {
         );
     });
     it("success 12 months", async () => {
-      await collection.connect(wallets[1] as any).extend(1, 1, {
+      await collection.connect(wallets[1] as any).extend(1, 12, {
         value: PRICE.mul(12).mul(89).div(100),
       });
       expect(await collection.ownerOf(1)).is.equal(wallets[1].address);
+    });
+    it("revert TierDisabled()", async () => {
+      await collection.enableTier(1, false);
+      const tx = collection.connect(wallets[1] as any).extend(1, 1, {
+        value: PRICE,
+      });
+      await expect(tx).to.be.revertedWith("TierDisabled()");
     });
     it("revert InvalidSubscriptionPlan()", async () => {
       const tx = collection.connect(wallets[1] as any).extend(2, 1, {
@@ -262,6 +286,41 @@ describe("Account", () => {
     });
     it("revert invalid tier", async () => {
       const tx = collection.changeTierPrice(1, 0);
+      await expect(tx).to.be.revertedWith("InvalidTier()");
+    });
+  });
+
+  describe("enableTier", () => {
+    it("success", async () => {
+      await collection.addTier(
+        ethers.utils.formatBytes32String("PREMIUM"),
+        PRICE
+      );
+      await collection.enableTier(1, false);
+      const tier1 = await collection.tiers(1);
+      expect(tier1.enabled).to.equal(false);
+      await collection.enableTier(1, true);
+      const tier2 = await collection.tiers(1);
+      expect(tier2.enabled).to.equal(true);
+    });
+    it("emit event", async () => {
+      await collection.addTier(
+        ethers.utils.formatBytes32String("PREMIUM"),
+        PRICE
+      );
+      const tx = await collection.enableTier(1, false);
+      await expect(tx).to.emit(collection, "EnableTier").withArgs(1, false);
+    });
+    it("revert only owner", async () => {
+      await collection.addTier(
+        ethers.utils.formatBytes32String("PREMIUM"),
+        PRICE
+      );
+      const tx = collection.connect(wallets[1] as any).enableTier(1, false);
+      await expect(tx).to.be.revertedWith("UNAUTHORIZED");
+    });
+    it("revert invalid tier", async () => {
+      const tx = collection.enableTier(1, false);
       await expect(tx).to.be.revertedWith("InvalidTier()");
     });
   });

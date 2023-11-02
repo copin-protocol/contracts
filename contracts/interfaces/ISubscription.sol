@@ -8,7 +8,8 @@ interface ISubscription {
         uint256 indexed tokenId,
         uint256 indexed tierId,
         uint256 fee,
-        uint256 duration,
+        uint256 startedTime,
+        uint256 expiredTime,
         address owner
     );
 
@@ -23,10 +24,13 @@ interface ISubscription {
 
     event ChangeTierPrice(uint256 tierId, uint256 oldPrice, uint256 newPrice);
 
+    event EnableTier(uint256 tierId, bool enabled);
+
     struct Tier {
         bytes32 name;
         uint256 price;
         uint256 quantity;
+        bool enabled;
     }
 
     struct SubscriptionPlan {
@@ -39,6 +43,8 @@ interface ISubscription {
     error InvalidSubscriptionPlan();
 
     error InvalidTier();
+
+    error TierDisabled();
 
     error InvalidDuration();
 
