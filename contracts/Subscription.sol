@@ -2,10 +2,17 @@
 pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import {ISubscription} from "contracts/interfaces/ISubscription.sol";
 import {Owned} from "contracts/utils/Owned.sol";
 
-contract Subscription is ISubscription, ERC721Enumerable, Owned {
+contract Subscription is
+    ISubscription,
+    ERC721,
+    ERC721Enumerable,
+    ERC2981,
+    Owned
+{
     uint256 nextTierId = 1;
     uint256 nextTokenId = 1;
 
@@ -14,7 +21,41 @@ contract Subscription is ISubscription, ERC721Enumerable, Owned {
 
     constructor(
         address _owner
-    ) Owned(_owner) ERC721("Copin Subscription", "COPINSUB") {}
+    ) Owned(_owner) ERC721("Copin Subscription", "COPINSUB") {
+        _setDefaultRoyalty(_owner, 1000);
+    }
+
+    function transferOwnership(
+        address newOwner
+    ) public override(Owned) onlyOwner {
+        super.transferOwnership(newOwner);
+        _setDefaultRoyalty(newOwner, 1000);
+    }
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "https://api.copin.io/subscription/metadata";
+    }
+
+    function contractURI() public pure returns (string memory) {
+        string
+            memory json = '{"name":"Copin Subscription","description":"This collection represents subscription plans of Copin","image":"ipfs://bafybeifxchritbyyxwa6ob66sxvio2ladhek5s6do7gdtnbmct5ni6w4hy","external_link" : "copin.io"}';
+        return string.concat("data:application/json;utf8,", json);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721, ERC721Enumerable, ERC2981) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
 
     function mint(uint256 tierId, uint256 duration) external payable {
         Tier storage tier = tiers[tierId];
@@ -33,6 +74,7 @@ contract Subscription is ISubscription, ERC721Enumerable, Owned {
         }
         uint256 tokenId = nextTokenId++;
         _mint(msg.sender, tokenId);
+        // _setTokenRoyalty(tokenId, owner, 1000);
         uint256 expiredTime = block.timestamp + duration * 30 * 24 * 3600;
         subscriptions[tokenId] = SubscriptionPlan({
             startedTime: block.timestamp,

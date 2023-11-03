@@ -16,6 +16,7 @@ async function main() {
 
   await run("verify:verify", {
     address: collection.address,
+    // address: "0x24994b0F5cbDB1e1bbfc80d41875aAEFa713a2F0",
     constructorArguments: [wallet.address],
   });
 }

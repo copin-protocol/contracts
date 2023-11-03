@@ -42,6 +42,7 @@ const config: HardhatUserConfig = {
     // Obtain one at https://etherscan.io/
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY!,
+      goerli: process.env.ETHERSCAN_API_KEY!,
       optimisticEthereum: process.env.OPSCAN_API_KEY!,
       arbitrumOne: process.env.ARBISCAN_API_KEY!,
     },

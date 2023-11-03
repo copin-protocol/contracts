@@ -57,4 +57,8 @@ interface ISubscription {
     error ZeroPrice();
 
     error EthWithdrawalFailed();
+
+    error NotAllowedByRegistry();
+
+    error RegistryNotSet();
 }
