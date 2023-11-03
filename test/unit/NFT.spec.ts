@@ -28,6 +28,29 @@ describe("Account", () => {
     ({ collection } = await loadFixture(fixture));
   });
 
+  describe("OWNERSHIP", () => {
+    it("factory transferOwnership", async () => {
+      await collection.transferOwnership(wallets[1].address);
+      expect(await collection.owner()).to.equal(wallets[1].address);
+      await collection
+        .connect(wallets[1] as any)
+        .addTier(ethers.utils.formatBytes32String("Premium"), PRICE);
+      const tier1 = await collection.tiers(1);
+      expect(tier1.name).to.equal(ethers.utils.formatBytes32String("Premium"));
+    });
+    it("emit event", async () => {
+      await expect(collection.transferOwnership(wallets[1].address))
+        .to.be.emit(collection, "OwnershipTransferred")
+        .withArgs(wallets[0].address, wallets[1].address);
+    });
+    it("revert old owner action", async () => {
+      await collection.transferOwnership(wallets[1].address);
+      await expect(
+        collection.addTier(ethers.utils.formatBytes32String("Premium"), PRICE)
+      ).to.be.revertedWith("UNAUTHORIZED");
+    });
+  });
+
   describe("mint", () => {
     beforeEach("create tier", async () => {
       await collection.addTier(
