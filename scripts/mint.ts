@@ -5,7 +5,7 @@ async function main() {
   const [, wallet2] = await ethers.getSigners();
 
   const collection = await new ethers.Contract(
-    "0x24994b0F5cbDB1e1bbfc80d41875aAEFa713a2F0",
+    "0xE06c2497422b6428350E2E7da24d3FE816166983",
     abi,
     wallet2 as any
   );

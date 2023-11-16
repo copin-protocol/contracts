@@ -9,7 +9,11 @@ import { ethers } from "hardhat";
 
 export async function completeFixture([wallet]: SignerWithAddress[]) {
   const Collection = await ethers.getContractFactory("Subscription");
-  const collection = await Collection.deploy(wallet.address);
+  const collection = await Collection.deploy(
+    wallet.address,
+    wallet.address,
+    "https://api.copin.io/nft-subscriptions/metadata/"
+  );
 
   return {
     collection,

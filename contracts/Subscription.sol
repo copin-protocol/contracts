@@ -3,6 +3,7 @@ pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISubscription} from "contracts/interfaces/ISubscription.sol";
 import {Owned} from "contracts/utils/Owned.sol";
 
@@ -15,30 +16,34 @@ contract Subscription is
 {
     uint256 nextTierId = 1;
     uint256 nextTokenId = 1;
+    uint256 constant DURATION_UNIT = 30 * 24 * 3600;
+    string public baseTokenURI;
 
     mapping(uint256 => Tier) public tiers;
     mapping(uint256 => SubscriptionPlan) public subscriptions;
 
     constructor(
-        address _owner
+        address _owner,
+        address _royaltyReceiver,
+        string memory _baseTokenURI
     ) Owned(_owner) ERC721("Copin Subscription", "COPINSUB") {
-        _setDefaultRoyalty(_owner, 1000);
+        _setDefaultRoyalty(_royaltyReceiver, 1000);
+        setBaseURI(_baseTokenURI);
     }
 
     function transferOwnership(
         address newOwner
     ) public override(Owned) onlyOwner {
         super.transferOwnership(newOwner);
-        _setDefaultRoyalty(newOwner, 1000);
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://api.copin.io/subscription/metadata";
+    function _baseURI() internal view virtual override returns (string memory) {
+        return baseTokenURI;
     }
 
     function contractURI() public pure returns (string memory) {
         string
-            memory json = '{"name":"Copin Subscription","description":"This collection represents subscription plans of Copin","image":"ipfs://bafybeifxchritbyyxwa6ob66sxvio2ladhek5s6do7gdtnbmct5ni6w4hy","external_link" : "copin.io"}';
+            memory json = '{"name":"Copin Subscription","description":"This collection represents subscription plans of Copin","image":"ipfs://bafybeifxchritbyyxwa6ob66sxvio2ladhek5s6do7gdtnbmct5ni6w4hy","external_link" : "https://app.copin.io/subscription"}';
         return string.concat("data:application/json;utf8,", json);
     }
 
@@ -75,7 +80,7 @@ contract Subscription is
         uint256 tokenId = nextTokenId++;
         _mint(msg.sender, tokenId);
         // _setTokenRoyalty(tokenId, owner, 1000);
-        uint256 expiredTime = block.timestamp + duration * 30 * 24 * 3600;
+        uint256 expiredTime = block.timestamp + duration * DURATION_UNIT;
         subscriptions[tokenId] = SubscriptionPlan({
             startedTime: block.timestamp,
             expiredTime: expiredTime,
@@ -113,7 +118,7 @@ contract Subscription is
             revert InsufficientFunds();
         }
         uint256 oldExpiredTime = subscription.expiredTime;
-        subscription.expiredTime += duration * 30 * 24 * 3600;
+        subscription.expiredTime += duration * DURATION_UNIT;
         emit Extend(tokenId, fee, oldExpiredTime, subscription.expiredTime);
     }
 
@@ -166,6 +171,11 @@ contract Subscription is
         emit EnableTier(tierId, enabled);
     }
 
+    function setBaseURI(string memory _baseTokenURI) public onlyOwner {
+        baseTokenURI = _baseTokenURI;
+        emit ChangeBaseTokenURI(_baseTokenURI);
+    }
+
     function withdrawEth(address receiver, uint256 amount) external onlyOwner {
         if (receiver == address(0)) {
             revert AddressZero();
@@ -175,5 +185,15 @@ contract Subscription is
             if (!success) revert EthWithdrawalFailed();
             emit EthWithdraw(receiver, amount);
         }
+    }
+
+    function clearStuckBalance(
+        address token,
+        address receiver
+    ) external onlyOwner {
+        IERC20(token).transfer(
+            receiver,
+            IERC20(token).balanceOf(address(this))
+        );
     }
 }

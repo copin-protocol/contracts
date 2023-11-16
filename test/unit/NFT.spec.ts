@@ -268,6 +268,24 @@ describe("Account", () => {
     });
   });
 
+  describe("setBaseUri", () => {
+    it("success", async () => {
+      await collection.setBaseURI("test");
+      const text = await collection.baseTokenURI();
+      expect(text).to.equal("test");
+    });
+    it("emit event", async () => {
+      const tx = await collection.setBaseURI("test");
+      await expect(tx)
+        .to.emit(collection, "ChangeBaseTokenURI")
+        .withArgs("test");
+    });
+    it("revert only owner", async () => {
+      const tx = collection.connect(wallets[1] as any).setBaseURI("test");
+      await expect(tx).to.be.revertedWith("UNAUTHORIZED");
+    });
+  });
+
   describe("changeTierPrice", () => {
     it("success", async () => {
       await collection.addTier(

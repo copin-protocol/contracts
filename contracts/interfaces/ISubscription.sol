@@ -26,6 +26,8 @@ interface ISubscription {
 
     event EnableTier(uint256 tierId, bool enabled);
 
+    event ChangeBaseTokenURI(string uri);
+
     struct Tier {
         bytes32 name;
         uint256 price;

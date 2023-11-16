@@ -24,11 +24,19 @@ const config: HardhatUserConfig = {
     },
     testnet: {
       url: process.env.TESTNET_NODE_URL,
-      accounts: [process.env.PRIVATE_KEY_1!, process.env.PRIVATE_KEY_2!],
+      accounts: [
+        process.env.PRIVATE_KEY_1!,
+        process.env.PRIVATE_KEY_2!,
+        process.env.PRIVATE_KEY_3!,
+      ],
     },
     mainnet: {
       url: process.env.MAINNET_NODE_URL,
-      accounts: [process.env.PRIVATE_KEY_1!, process.env.PRIVATE_KEY_2!],
+      accounts: [
+        process.env.PRIVATE_KEY_1!,
+        process.env.PRIVATE_KEY_2!,
+        process.env.PRIVATE_KEY_3!,
+      ],
     },
   },
   gasReporter: {
