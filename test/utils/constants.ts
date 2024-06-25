@@ -1,6 +1,6 @@
 require("dotenv").config();
 const BASE_TOKEN_URI = process.env.BASE_TOKEN_URI;
-const ROYALTY_RECEIVER = process.env.BASE_TOKEN_URI;
+const ROYALTY_RECEIVER = process.env.ROYALTY_RECEIVER;
 const MONTH_UNIT = 30 * 24 * 3600;
 const PROCESSING_GAS = 400000;
 export { MONTH_UNIT, PROCESSING_GAS, BASE_TOKEN_URI, ROYALTY_RECEIVER };

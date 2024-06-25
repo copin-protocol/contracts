@@ -65,10 +65,10 @@ const config: HardhatUserConfig = {
       },
       {
         network: "optimisticEthereum",
-        chainId: 420,
+        chainId: 11155420,
         urls: {
-          apiURL: "https://api-goerli-optimism.etherscan.io/api",
-          browserURL: "https://goerli-optimism.etherscan.io",
+          apiURL: "https://api-sepolia-optimism.etherscan.io/api",
+          browserURL: "https://sepolia-optimism.etherscan.io",
         },
       },
     ],

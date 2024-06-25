@@ -1,5 +1,5 @@
 import { ethers, run } from "hardhat";
-import { abi } from "../artifacts/contracts/Subscription.sol/Subscription.json";
+import { abi } from "../../artifacts/contracts/Subscription.sol/Subscription.json";
 
 async function main() {
   const [wallet1, wallet2] = await ethers.getSigners();
