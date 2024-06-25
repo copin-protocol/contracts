@@ -10,13 +10,17 @@ contract CopyTradingFees is ICopyTradingFees, Owned {
     address executor;
     address feeReceiver;
     mapping(address => bool) public _paymentTokens;
-    mapping(uint96 => Fee) public _fees;
+    mapping(uint96 => FeeInfo) public _feeInfos;
 
     constructor(address _owner, address _executor) Owned(_owner) {
         executor = _executor;
         feeReceiver = _owner;
         emit SetExecutor(executor);
         emit ChangeFeeReceiver(feeReceiver);
+    }
+
+    function getFeeInfo(uint96 _id) external view returns (FeeInfo memory) {
+        return _feeInfos[_id];
     }
 
     function setExecutor(address _executor) external onlyOwner {
@@ -49,35 +53,41 @@ contract CopyTradingFees is ICopyTradingFees, Owned {
         super.transferOwnership(newOwner);
     }
 
-    function chargeFee(
-        uint96 _id,
-        address _account,
-        uint128 _size,
-        uint128 _fee,
-        address _token
-    ) external {
+    function chargeFees(FeeInfo[] memory feeInfos, address _token) external {
+        for (uint i = 0; i < feeInfos.length; i++) {
+            chargeFee(feeInfos[i], _token);
+        }
+    }
+
+    function chargeFee(FeeInfo memory feeInfo, address _token) public {
         if (msg.sender != executor) {
             revert OnlyExecutor();
         }
         if (!_paymentTokens[_token]) {
             revert TokenNotSupported();
         }
-        if (_size == 0) {
+        if (feeInfo.size == 0) {
             revert SizeZero();
         }
-        if (_id == 0) {
+        if (feeInfo.id == 0) {
             revert InvalidFeeId();
         }
-        if (_fees[_id].size > 0) {
+        if (_feeInfos[feeInfo.id].size > 0) {
             revert AlreadyCharged();
         }
         IERC20(_token).transferFrom(
-            _account,
+            feeInfo.account,
             feeReceiver,
-            _fromD18(_token, _fee)
+            _fromD18(_token, feeInfo.fee)
         );
-        _fees[_id] = Fee({id: _id, account: _account, size: _size, fee: _fee});
-        emit ChargeFee(_id, _account, _size, _fee, feeReceiver);
+        _feeInfos[feeInfo.id] = feeInfo;
+        emit ChargeFee(
+            feeInfo.id,
+            feeInfo.account,
+            feeInfo.size,
+            feeInfo.fee,
+            feeReceiver
+        );
     }
 
     function withdrawEth(address receiver, uint256 amount) external onlyOwner {

@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 interface ICopyTradingFees {
-    struct Fee {
+    struct FeeInfo {
         uint96 id; // max: 7.9228e28
         address account;
         uint128 size; // 1e18; max: 3.4028e38
