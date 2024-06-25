@@ -20,16 +20,25 @@ contract CopyTradingFees is ICopyTradingFees, Owned {
     }
 
     function setExecutor(address _executor) external onlyOwner {
+        if (_executor == address(0)) {
+            revert AddressZero();
+        }
         executor = _executor;
         emit SetExecutor(executor);
     }
 
     function changeFeeReceiver(address _receiver) external onlyOwner {
+        if (_receiver == address(0)) {
+            revert AddressZero();
+        }
         feeReceiver = _receiver;
         emit ChangeFeeReceiver(feeReceiver);
     }
 
     function setPaymentToken(address _token, bool _enable) external onlyOwner {
+        if (_token == address(0)) {
+            revert AddressZero();
+        }
         _paymentTokens[_token] = _enable;
         emit SetPaymentToken(_token, _enable);
     }
