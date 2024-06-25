@@ -1,8 +1,8 @@
 {
   "name": "copin-contracts",
   "scripts": {
-    "deploy:testnet": "npx hardhat run --network testnet scripts/deploy.ts",
-    "deploy:mainnet": "npx hardhat run --network mainnet scripts/deploy.ts",
+    "deploy:subscription:testnet": "npx hardhat run --network testnet scripts/subscription/deploy.ts",
+    "deploy:subscription:mainnet": "npx hardhat run --network mainnet scripts/subscription/deploy.ts",
     "compile": "hardhat compile",
     "test": "hardhat test",
     "watch": "hardhat watch"
