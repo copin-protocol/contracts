@@ -1,40 +1,40 @@
 import fs from "fs";
 import { ethers } from "hardhat";
-import { operator, nftSubContractAddress } from "../../config";
+import { operator, subContractAddress } from "../../config";
 
 async function deployContract() {
-  let referralRebateContract;
+  let subDiscountContract;
 
   const [owner] = await ethers.getSigners();
 
   try {
-    referralRebateContract = await ethers.deployContract("DiscountNFT", [
-      nftSubContractAddress,
+    subDiscountContract = await ethers.deployContract("SubscriptionDiscount", [
+      subContractAddress,
       owner,
       operator,
     ]);
-    await referralRebateContract.waitForDeployment();
+    await subDiscountContract.waitForDeployment();
 
     console.log("Contracts deployed successfully.");
-    return referralRebateContract;
+    return subDiscountContract;
   } catch (error) {
     console.error("Error deploying contracts:", error);
     throw error;
   }
 }
 
-async function saveContractAddress(referralRebateContract: any) {
+async function saveContractAddress(subDiscountContract: any) {
   try {
     const address = JSON.stringify(
       {
-        contract: referralRebateContract.target,
+        contract: subDiscountContract.target,
       },
       null,
       4
     );
 
     fs.writeFile(
-      "./scripts/deploy/discount_nft.json",
+      "./scripts/deploy/subscription-discount.json",
       address,
       "utf8",
       (error) => {

@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import discountNft from "../deploy/discount_nft.json";
+import subDiscount from "../deploy/subscription-discount.json";
 import { generateSignature } from "../../test/helper/helper"
 import { operator, privKey } from "../../config";
 import { parseWithDecimal } from "../../test/utils/fixtures";
@@ -7,14 +7,14 @@ import { parseWithDecimal } from "../../test/utils/fixtures";
 async function main() {
   const subscriptionDiscountContract = await ethers.getContractAt(
     "SubscriptionDiscount",
-    discountNft.contract
+    subDiscount.contract
   );
 
   const discountPercent = 20;
   const userAmount = parseWithDecimal('0.0006');
   const tierId = 1
   const duration = 1;
-  const nonce = ethers.encodeBytes32String('AXB6DC')
+  const nonce = ethers.encodeBytes32String('AXB1DC')
   const signer = await ethers.getSigner(operator);
   const userWallet = new ethers.Wallet(privKey, ethers.provider);
   const signature = await generateSignature(

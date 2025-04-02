@@ -5,10 +5,9 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ISubscriptionDiscount} from "./interfaces/ISubscriptionDiscount.sol";
-import {ISubscription, ITier} from "./interfaces/ISubscription.sol";
+import {ISubscription} from "./interfaces/ISubscription.sol";
 import "../libraries/Verify.sol";
 import {Owned} from "./utils/Owned.sol";
-import "hardhat/console.sol";
 
 contract SubscriptionDiscount is ISubscriptionDiscount, ReentrancyGuard, Owned {
     using Address for address;
@@ -43,7 +42,7 @@ contract SubscriptionDiscount is ISubscriptionDiscount, ReentrancyGuard, Owned {
     }
 
     function setMaxDiscountPercent(uint256 _discountPercent) public onlyOwner {
-        require(_discountPercent >= 0, "Invalid discount percent");
+        require(_discountPercent <= 100, "Invalid discount percent");
         maxDiscountPercent = _discountPercent;
         emit MaxDiscountPercentSet(maxDiscountPercent);
     }
@@ -84,10 +83,10 @@ contract SubscriptionDiscount is ISubscriptionDiscount, ReentrancyGuard, Owned {
         );
         require(verified == true, "Invalid signature");
 
-        ITier memory tier = _getTierInfo(tierId);
+        (, uint256 price, , ) = SUBSCRIPTION_CONTRACT.tiers(tierId);
 
         (uint256 originalFee, uint256 userFee) = _getSubscriptionFees(
-            tier.price,
+            price,
             duration,
             discountPercent
         );
@@ -117,22 +116,6 @@ contract SubscriptionDiscount is ISubscriptionDiscount, ReentrancyGuard, Owned {
         uint256 originalFee = (price * duration * (100 - duration + 1)) / 100;
         uint256 discountedFee = ((100 - discountPercent) * originalFee) / 100;
         return (originalFee, discountedFee);
-    }
-
-    function _getTierInfo(uint256 tierId) public view returns (ITier memory) {
-        (
-            bytes32 name,
-            uint256 price,
-            uint256 quantity,
-            bool enabled
-        ) = SUBSCRIPTION_CONTRACT.tiers(tierId);
-        return
-            ITier({
-                name: name,
-                price: price,
-                quantity: quantity,
-                enabled: enabled
-            });
     }
 
     function depositEth() external payable onlyPayer {

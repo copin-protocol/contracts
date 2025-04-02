@@ -1,11 +1,11 @@
 import { ethers } from "hardhat";
-import discountNft from "../deploy/discount_nft.json";
+import subDiscount from "../deploy/subscription-discount.json";
 import { operator } from "../../config";
 
 async function main() {
   const discountNftContract = await ethers.getContractAt(
-    "DiscountNFT",
-    discountNft.contract
+    "SubscriptionDiscount",
+    subDiscount.contract
   );
 
   const tx = await discountNftContract.setOperator(operator);

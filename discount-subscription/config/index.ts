@@ -10,4 +10,4 @@ export const mainnetNodeUrl: string | any = process.env.ALCHEMY_API_MAINNET;
 export const operator: string | any = process.env.OPERATOR;
 export const payer: string | any = process.env.PAYER;
 export const owner: string | any = process.env.OWNER;
-export const nftSubContractAddress: string | any = process.env.NFT_SUB_CONTRACT_ADDRESS;
+export const subContractAddress: string | any = process.env.SUB_CONTRACT_ADDRESS;

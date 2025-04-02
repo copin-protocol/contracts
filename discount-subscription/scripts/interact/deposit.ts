@@ -1,15 +1,15 @@
 import { ethers } from "hardhat";
-import discountNft from "../deploy/discount_nft.json";
+import subDiscount from "../deploy/subscription-discount.json";
 import {parseWithDecimal} from '../../test/utils/fixtures'
 
 async function main() {
-  const discountNftContract = await ethers.getContractAt(
-    "DiscountNFT",
-    discountNft.contract
+  const subDiscountContract = await ethers.getContractAt(
+    "SubscriptionDiscount",
+    subDiscount.contract
   );
 
   const depositAmount = parseWithDecimal("0.01");
-  const tx = await discountNftContract.depositEth({value: depositAmount});
+  const tx = await subDiscountContract.depositEth({value: depositAmount});
   await tx.wait(); 
   console.log("Deposit successfully : ",tx.hash);
 }

@@ -1,14 +1,15 @@
 import { ethers } from "hardhat";
 import subDiscount from "../deploy/subscription-discount.json";
-import { payer } from "../../config";
+import { operator } from "../../config";
 
 async function main() {
-  const discountNftContract = await ethers.getContractAt(
+  const subDiscountContract = await ethers.getContractAt(
     "SubscriptionDiscount",
     subDiscount.contract
   );
 
-  const tx = await discountNftContract.setPayer(payer);
+  const discountPercent = 60
+  const tx = await subDiscountContract.setMaxDiscountPercent(discountPercent);
 
   await tx.wait(); 
   console.log("Update successfully : ",tx.hash);
