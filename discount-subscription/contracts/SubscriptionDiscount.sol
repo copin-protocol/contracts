@@ -4,21 +4,22 @@ pragma solidity ^0.8.0;
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IDiscountNFT} from "./interfaces/IDiscountNFT.sol";
-import {ISubscriptionNFT, ITier} from "./interfaces/ISubscriptionNFT.sol";
+import {ISubscriptionDiscount} from "./interfaces/ISubscriptionDiscount.sol";
+import {ISubscription, ITier} from "./interfaces/ISubscription.sol";
 import "../libraries/Verify.sol";
 import {Owned} from "./utils/Owned.sol";
 import "hardhat/console.sol";
 
-contract DiscountNFT is IDiscountNFT, ReentrancyGuard, Owned {
+contract SubscriptionDiscount is ISubscriptionDiscount, ReentrancyGuard, Owned {
     using Address for address;
 
-    ISubscriptionNFT public immutable subscriptionContract;
+    ISubscription public immutable SUBSCRIPTION_CONTRACT;
     address nftContract;
 
     address public operator;
     address public payer;
-    mapping(bytes32 => bool) discountNonces;
+    uint256 public maxDiscountPercent = 50;
+    mapping(bytes32 => bool) usedDiscounts;
 
     modifier onlyOperator() {
         require(msg.sender == operator, "Only operator");
@@ -35,14 +36,16 @@ contract DiscountNFT is IDiscountNFT, ReentrancyGuard, Owned {
         address _owner,
         address _operator
     ) Owned(_owner) {
-        subscriptionContract = ISubscriptionNFT(_nftContract);
+        SUBSCRIPTION_CONTRACT = ISubscription(_nftContract);
         payer = _owner;
         operator = _operator;
         nftContract = _nftContract;
     }
 
-    function getNftSub() public view returns (address) {
-        return nftContract;
+    function setMaxDiscountPercent(uint256 _discountPercent) public onlyOwner {
+        require(_discountPercent >= 0, "Invalid discount percent");
+        maxDiscountPercent = _discountPercent;
+        emit MaxDiscountPercentSet(maxDiscountPercent);
     }
 
     function setOperator(address _operator) public onlyOwner {
@@ -61,7 +64,7 @@ contract DiscountNFT is IDiscountNFT, ReentrancyGuard, Owned {
         emit PayerSet(payer);
     }
 
-    function mintNftWithDiscount(
+    function mint(
         address user,
         uint256 discountPercent,
         bytes32 nonce,
@@ -69,8 +72,11 @@ contract DiscountNFT is IDiscountNFT, ReentrancyGuard, Owned {
         uint256 tierId,
         uint256 duration
     ) external payable nonReentrant {
-        require(discountPercent <= 50, "Invalid discount");
-        require(!discountNonces[nonce], "Already redeemed");
+        require(
+            discountPercent <= maxDiscountPercent,
+            "Over max discount percent"
+        );
+        require(!usedDiscounts[nonce], "Already redeemed");
         bool verified = Verify.verifySignature(
             keccak256(abi.encodePacked(nonce, user, discountPercent, tierId)),
             signature,
@@ -79,41 +85,38 @@ contract DiscountNFT is IDiscountNFT, ReentrancyGuard, Owned {
         require(verified == true, "Invalid signature");
 
         ITier memory tier = _getTierInfo(tierId);
-        uint256 originalFee = _feeMintNftWithDiscount(tier.price, duration, 0);
 
-        uint256 userFee = _feeMintNftWithDiscount(
+        (uint256 originalFee, uint256 userFee) = _getSubscriptionFees(
             tier.price,
             duration,
             discountPercent
         );
+
         require(msg.value >= userFee, "Insufficient user fund");
-        require(address(this).balance >= originalFee, "Insufficient fund");
+        require(
+            address(this).balance >= originalFee,
+            "Insufficient discount fund"
+        );
 
-        uint256 totalSupplyBefore = subscriptionContract.totalSupply();
-        subscriptionContract.mint{value: originalFee}(tierId, duration);
+        uint256 totalSupplyBefore = SUBSCRIPTION_CONTRACT.totalSupply();
+        SUBSCRIPTION_CONTRACT.mint{value: originalFee}(tierId, duration);
         uint256 tokenId = totalSupplyBefore + 1;
-       
-        discountNonces[nonce] = true;
 
-        subscriptionContract.transferFrom(address(this), user, tokenId);
+        usedDiscounts[nonce] = true;
 
-        emit MintNFT(user, discountPercent, nonce, tokenId);
+        SUBSCRIPTION_CONTRACT.transferFrom(address(this), user, tokenId);
+
+        emit MintDiscounted(user, tokenId, nonce, discountPercent);
     }
 
-    function _feeMintNft(
-        uint256 price,
-        uint256 duration
-    ) internal pure returns (uint256) {
-        return (price * duration * (100 - duration + 1)) / 100;
-    }
-
-    function _feeMintNftWithDiscount(
+    function _getSubscriptionFees(
         uint256 price,
         uint256 duration,
         uint256 discountPercent
-    ) internal pure returns (uint256) {
-        uint256 originalFee = _feeMintNft(price, duration);
-        return ((100 - discountPercent) * originalFee) / 100;
+    ) internal pure returns (uint256, uint256) {
+        uint256 originalFee = (price * duration * (100 - duration + 1)) / 100;
+        uint256 discountedFee = ((100 - discountPercent) * originalFee) / 100;
+        return (originalFee, discountedFee);
     }
 
     function _getTierInfo(uint256 tierId) public view returns (ITier memory) {
@@ -122,7 +125,7 @@ contract DiscountNFT is IDiscountNFT, ReentrancyGuard, Owned {
             uint256 price,
             uint256 quantity,
             bool enabled
-        ) = subscriptionContract.tiers(tierId);
+        ) = SUBSCRIPTION_CONTRACT.tiers(tierId);
         return
             ITier({
                 name: name,

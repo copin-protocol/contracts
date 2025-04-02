@@ -4,11 +4,11 @@ import { ethers } from "hardhat";
 export async function completeFixture() {
 
   const [owner, operator] = await ethers.getSigners();
-  const NftSubContract = await ethers.getContractFactory("MockNftSub");
-  const nftSubContract = await NftSubContract.deploy();
-  const DiscountNftContract = await ethers.getContractFactory("DiscountNFT");
-  const discountNftContract = await DiscountNftContract.deploy(nftSubContract.target, owner.address, operator.address);
-  return { nftSubContract, discountNftContract };
+  const SubContract = await ethers.getContractFactory("MockSubscription");
+  const subContract = await SubContract.deploy();
+  const SubscriptionDiscountContract = await ethers.getContractFactory("SubscriptionDiscount");
+  const subDiscountContract = await SubscriptionDiscountContract.deploy(subContract.target, owner.address, operator.address);
+  return { subContract, subDiscountContract };
 }
 
 

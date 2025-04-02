@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {ISubscriptionNFT} from "../interfaces/ISubscriptionNFT.sol";
+import {ISubscription} from "../interfaces/ISubscription.sol";
 
-contract MockNftSub is ISubscriptionNFT, ERC721  {
+contract MockSubscription is ISubscription, ERC721  {
     uint256 private _totalSupply = 0;
     uint256 private _nextTokenId = 1;
     mapping(uint256 => bool) public tierEnabled;

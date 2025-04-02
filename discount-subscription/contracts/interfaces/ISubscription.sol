@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-interface ISubscriptionNFT is IERC721 {
+interface ISubscription is IERC721 {
     function tiers(
         uint256 tierId
     )

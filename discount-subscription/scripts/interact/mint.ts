@@ -5,8 +5,8 @@ import { operator, privKey } from "../../config";
 import { parseWithDecimal } from "../../test/utils/fixtures";
 
 async function main() {
-  const discountNftContract = await ethers.getContractAt(
-    "DiscountNFT",
+  const subscriptionDiscountContract = await ethers.getContractAt(
+    "SubscriptionDiscount",
     discountNft.contract
   );
 
@@ -14,7 +14,7 @@ async function main() {
   const userAmount = parseWithDecimal('0.0006');
   const tierId = 1
   const duration = 1;
-  const nonce = ethers.encodeBytes32String('AXB4DC')
+  const nonce = ethers.encodeBytes32String('AXB6DC')
   const signer = await ethers.getSigner(operator);
   const userWallet = new ethers.Wallet(privKey, ethers.provider);
   const signature = await generateSignature(
@@ -22,11 +22,8 @@ async function main() {
     ['bytes32', 'address', 'uint256', 'uint256'],
     [nonce, userWallet.address, discountPercent, tierId]
   );
-  console.log(nonce)
-  console.log(signature)
-  console.log(userAmount)
 
-  const tx = await discountNftContract.connect(userWallet).mintNftWithDiscount(
+  const tx = await subscriptionDiscountContract.connect(userWallet).mint(
     userWallet.address,
     discountPercent,
     nonce,
