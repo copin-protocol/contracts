@@ -10,11 +10,13 @@ async function main() {
     subDiscount.contract
   );
 
+  const nftPrice = parseWithDecimal('0.0006');
   const discountPercent = 20;
-  const userAmount = parseWithDecimal('0.0006');
+  const priceWithDiscount = nftPrice * BigInt(100 - discountPercent) / BigInt(100);
+  const userAmount = priceWithDiscount;
   const tierId = 1
   const duration = 1;
-  const nonce = ethers.encodeBytes32String('AXB1DC')
+  const nonce = ethers.encodeBytes32String('AXB2DC')
   const signer = await ethers.getSigner(operator);
   const userWallet = new ethers.Wallet(privKey, ethers.provider);
   const signature = await generateSignature(

@@ -11,8 +11,8 @@ async function main() {
   const discountPercent = 60
   const tx = await subDiscountContract.setMaxDiscountPercent(discountPercent);
 
-  await tx.wait(); 
-  console.log("Update successfully : ",tx.hash);
+  await tx.wait();
+  console.log("Update successfully : ", tx.hash);
 }
 
 main()

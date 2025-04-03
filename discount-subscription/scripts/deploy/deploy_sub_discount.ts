@@ -55,7 +55,7 @@ async function main() {
   let contract;
   try {
     contract = await deployContract();
-    
+
     await saveContractAddress(contract);
 
     console.log("Contract deployment completed successfully.");

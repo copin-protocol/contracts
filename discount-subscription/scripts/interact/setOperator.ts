@@ -10,8 +10,8 @@ async function main() {
 
   const tx = await discountNftContract.setOperator(operator);
 
-  await tx.wait(); 
-  console.log("Update successfully : ",tx.hash);
+  await tx.wait();
+  console.log("Update successfully : ", tx.hash);
 }
 
 main()
