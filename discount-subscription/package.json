@@ -1,0 +1,25 @@
+{
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:subDiscount:testnet": "hardhat run scripts/deploy/deploy_sub_discount.ts --network testnet",
+    "deploy:subDiscount:mainnet": "hardhat run scripts/deploy/deploy_sub_discount.ts --network mainnet",
+    "interact:setOperator": "hardhat run scripts/interact/setOperator.ts --network testnet",
+    "interact:setPayer": "hardhat run scripts/interact/setPayer.ts --network testnet",
+    "interact:deposit": "hardhat run scripts/interact/deposit.ts --network testnet",
+    "interact:withdraw": "hardhat run scripts/interact/withdraw.ts --network testnet",
+    "interact:setMaxDiscount": "hardhat run scripts/interact/setMaxDiscount.ts --network testnet",
+    "interact:mint": "hardhat run scripts/interact/mint.ts --network testnet",
+    "verify": "hardhat verify --network testnet"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-verify": "^2.0.8",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "5.0.0",
+    "hardhat": "2.22.6"
+  }
+}
