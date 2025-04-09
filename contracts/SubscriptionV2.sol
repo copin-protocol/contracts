@@ -13,6 +13,8 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
+import "hardhat/console.sol";
+
 contract SubscriptionV2 is
     ISubscriptionV2,
     ERC721,
@@ -24,7 +26,7 @@ contract SubscriptionV2 is
     uint256 nextTierId = 1;
     uint256 nextTokenId = 1;
     uint256 constant DURATION_UNIT = 30 * 24 * 3600;
-    uint256 maxDiscountPercent;
+    uint256 public maxDiscountPercent;
     string public baseTokenURI;
 
     address public operator;
@@ -124,7 +126,7 @@ contract SubscriptionV2 is
 
         unchecked {
             int8 diff = int8(tokenDecimals) - int8(usdcDecimals);
-            uint256 numerator = usdcReserve * 10 ** 18;
+            uint256 numerator = usdcReserve * 10 ** usdcDecimals;
 
             if (diff > 0)
                 return (numerator * (10 ** uint8(diff))) / tokenReserve;
@@ -157,7 +159,8 @@ contract SubscriptionV2 is
         // Calculate fee in USD
         uint256 usdFee = getFee(tierId, tier.price, duration, discountPercent);
         // Convert USD fee to ETH
-        uint256 ethFee = getPriceInUsdc(weth) * usdFee;
+        uint256 ethFee = (usdFee * 10 ** IERC20Metadata(weth).decimals()) /
+            getPriceInUsdc(weth);
 
         if (msg.value < ethFee) {
             revert InsufficientFunds();
@@ -168,7 +171,6 @@ contract SubscriptionV2 is
 
     // Modified extend function to use ETH price conversion
     function extend(
-        address receiver,
         uint256 tokenId,
         uint256 duration,
         uint256 discountPercent,
@@ -194,13 +196,14 @@ contract SubscriptionV2 is
             duration,
             discountPercent
         );
-        uint256 ethFee = getPriceInUsdc(weth) * usdFee;
+        uint256 ethFee = (usdFee * 10 ** IERC20Metadata(weth).decimals()) /
+            getPriceInUsdc(weth);
 
         if (msg.value < ethFee) {
             revert InsufficientFunds();
         }
 
-        _extendSubscription(receiver, subscription, tokenId, duration, usdFee);
+        _extendSubscription(subscription, tokenId, duration, usdFee);
     }
 
     function mintWithToken(
@@ -230,7 +233,9 @@ contract SubscriptionV2 is
 
         uint256 fee = getFee(tierId, tier.price, duration, discountPercent);
         if (token != usdc) {
-            fee = getPriceInUsdc(token) * fee;
+            fee =
+                (fee * 10 ** IERC20Metadata(token).decimals()) /
+                getPriceInUsdc(token);
         }
 
         bool success = IERC20(token).transferFrom(
@@ -247,7 +252,6 @@ contract SubscriptionV2 is
 
     function extendWithToken(
         address token,
-        address receiver,
         uint256 tokenId,
         uint256 duration,
         uint256 discountPercent,
@@ -272,13 +276,17 @@ contract SubscriptionV2 is
             );
         }
 
-        uint256 usdFee = getFee(
+        uint256 fee = getFee(
             subscription.tierId,
             tier.price,
             duration,
             discountPercent
         );
-        uint256 fee = getPriceInUsdc(token) * usdFee;
+        if (token != usdc) {
+            fee =
+                (fee * 10 ** IERC20Metadata(token).decimals()) /
+                getPriceInUsdc(token);
+        }
 
         bool success = IERC20(token).transferFrom(
             msg.sender,
@@ -288,8 +296,7 @@ contract SubscriptionV2 is
         if (!success) {
             revert InsufficientFunds();
         }
-
-        _extendSubscription(receiver, subscription, tokenId, duration, usdFee);
+        _extendSubscription(subscription, tokenId, duration, fee);
     }
 
     function addTier(
@@ -475,15 +482,11 @@ contract SubscriptionV2 is
     }
 
     function _extendSubscription(
-        address receiver,
         SubscriptionPlan storage subscription,
         uint256 tokenId,
         uint256 duration,
         uint256 usdFee
     ) internal {
-        if (receiver == address(0)) {
-            receiver = msg.sender;
-        }
         uint256 oldExpiredTime = subscription.expiredTime;
         subscription.expiredTime += duration * DURATION_UNIT;
         emit Extend(tokenId, usdFee, oldExpiredTime, subscription.expiredTime);
